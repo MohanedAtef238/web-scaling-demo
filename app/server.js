@@ -2,12 +2,11 @@ const express = require('express');
 const { createClient } = require('redis');
 const axios = require('axios');
 
-const serverPort = process.env.SERVER_PORT || process.env.PORT || 8080;
-const serverHost = process.env.SERVER_HOST || '0.0.0.0';
-
-const serverNumber = process.env.SERVER_NUMBER;
-const weatherApiUrl = process.env.WEATHER_API_URL;
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+const serverPort = 8080;
+const serverHost = '0.0.0.0';
+const serverNumber = '1';
+const weatherApiUrl = 'https://api.open-meteo.com/v1/forecast';
+const redisUrl = process.env.REDIS_URL
 
 const app = express();
 const redisClient = createClient({ url: redisUrl });
@@ -20,12 +19,10 @@ app.get('/', async (req, res) => {
 
   if (cachedWeatherData) {
     console.log('Serving weather from cache');
-
     const weatherData = JSON.parse(cachedWeatherData);
     const temperature = weatherData.current.temperature_2m;
 
     res.render('index', { serverNumber, temperature });
-
     return;
   }
 
@@ -59,12 +56,9 @@ async function main() {
 
     const shutdownHandler = async () => {
       console.log('Shutting down gracefully...');
-
       await redisClient.disconnect();
-
       server.close(() => {
         console.log('HTTP server closed');
-
         process.exit(0);
       });
     };
@@ -73,7 +67,6 @@ async function main() {
     process.on('SIGTERM', shutdownHandler);
   } catch (err) {
     console.error('Failed to start server:', err);
-
     process.exit(1);
   }
 }
