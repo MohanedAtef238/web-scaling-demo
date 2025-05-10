@@ -2,22 +2,15 @@ const express = require('express');
 const { createClient } = require('redis');
 const axios = require('axios');
 
-const serverPort = process.env.SERVER_PORT;
-const serverHost = process.env.SERVER_HOST;
+const serverPort = process.env.SERVER_PORT || process.env.PORT || 8080;
+const serverHost = process.env.SERVER_HOST || '0.0.0.0';
 
 const serverNumber = process.env.SERVER_NUMBER;
 const weatherApiUrl = process.env.WEATHER_API_URL;
-
-const redisHost = process.env.REDIS_HOST;
-const redisPort = process.env.REDIS_PORT;
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
 const app = express();
-const redisClient = createClient({
-  socket: {
-    host: redisHost,
-    port: redisPort,
-  },
-});
+const redisClient = createClient({ url: redisUrl });
 
 app.set('view engine', 'pug');
 
@@ -50,7 +43,7 @@ app.get('/', async (req, res) => {
   const weatherData = response.data;
   const temperature = weatherData.current.temperature_2m;
 
-  await redisClient.setEx(cacheKey, 600, JSON.stringify(weatherData)); // 600 seconds = 10 minutes
+  await redisClient.setEx(cacheKey, 600, JSON.stringify(weatherData));
 
   res.render('index', { serverNumber, temperature });
 });
